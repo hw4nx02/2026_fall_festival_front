@@ -44,4 +44,5 @@ jobs:
             node:22-alpine \
             sh -c "npm ci && npm run build"
 
-          test -f "$FRONT_DIR/dist/index.html"
+          test -f "$FRONT_DIR/dist/user/index.html"
+          test -f "$FRONT_DIR/dist/admin/index.html"

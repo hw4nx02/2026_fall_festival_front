@@ -7,14 +7,15 @@
 ```bash
 npm install
 cp .env.example .env   # VITE_API_BASE_URL 등 채우기
-npm run dev
+npm run dev             # 사용자 앱: http://localhost:5173
+npm run dev:admin       # 관리자 앱: http://localhost:5174
 ```
 
 ## 기술 스택
 
 - React 19 + Vite
 - styled-components (`ComponentName.styles.js` + `import * as S from './ComponentName.styles'` 컨벤션)
-- react-router-dom (라우트는 `src/router/index.jsx` 한 곳에서 관리)
+- react-router-dom (`userRouter.jsx`, `adminRouter.jsx`로 호스트별 라우트 분리)
 - Zustand (도메인을 넘나드는 진짜 전역 상태만 — 로그인/관리자 인증)
 - Axios (`src/api/client.js` 공통 인스턴스, `VITE_API_BASE_URL` 사용)
 - react-three-fiber + drei (지도 3D 씬, `src/app/map/scene/`)
@@ -27,7 +28,7 @@ npm run dev
 src/
 ├── app/                # 라우트 단위 도메인 (home, map, lantern, performance, info, mypage, auth, admin)
 ├── components/         # 도메인을 넘나드는 진짜 공통 컴포넌트 (common/, layout/)
-├── router/              # 라우트 정의 + AdminRoute 가드
+├── router/              # 사용자/관리자 라우트 정의 + AdminRoute 가드
 ├── store/                # Zustand — 전역 상태만 (인증)
 ├── api/                  # axios 클라이언트 + 도메인별 api 함수
 ├── hooks/                # 여러 도메인 공용 훅
@@ -46,4 +47,12 @@ src/
 
 ## 관리자 페이지
 
-`/admin/*` 라우트로 통합되어 있습니다. 일반 사이트와 레이아웃(`AdminAppLayout`)·테마(`adminTheme`, 다크)·인증(`useAdminAuthStore`, 관리자 키)이 완전히 분리되어 있으니, 관리자 화면 작업 시 일반 사이트 컴포넌트를 가져다 쓰지 말고 `src/app/admin/` 안에서 해결해주세요.
+사용자 앱(`dgufesta.com`)과 관리자 앱(`admin.dgufesta.com`)은 별도 번들로 빌드됩니다.
+
+```bash
+npm run build
+# dist/user  — dgufesta.com
+# dist/admin — admin.dgufesta.com
+```
+
+관리자 앱 내부 경로는 `/admin/*`를 유지합니다. 일반 사이트와 레이아웃(`AdminAppLayout`)·테마(`adminTheme`, 다크)·인증(`useAdminAuthStore`, 관리자 키)이 완전히 분리되어 있으니, 관리자 화면 작업 시 일반 사이트 컴포넌트를 가져다 쓰지 말고 `src/app/admin/` 안에서 해결해주세요.
