@@ -5,6 +5,7 @@ import * as S from './AdminNoticePage.styles'
 import { getAdminNotices } from '../../../../api/admin'
 import { getNoticeTypeLabel, isUrgentNotice } from './noticeTypes'
 import NoticeTypeSelectModal from './NoticeTypeSelectModal'
+import { ADMIN_PATHS } from '../../../../router/adminPaths'
 
 // 한 번에 불러오는 개수 (명세상 size 최대 100)
 const PAGE_SIZE = 20
@@ -58,7 +59,7 @@ export default function AdminNoticePage() {
       <S.TotalCount>{totalCount}개</S.TotalCount>
       <S.NoticeList>
         {notices.map((n) => (
-          <S.NoticeCard key={n.id} onClick={() => navigate(`/admin/notices/${n.id}`)}>
+          <S.NoticeCard key={n.id} onClick={() => navigate(ADMIN_PATHS.noticeDetail(n.id))}>
             <S.TitleRow>
               <S.TypeTag $urgent={isUrgentNotice(n.type)}>{getNoticeTypeLabel(n.type)}</S.TypeTag>
               <S.Title>{n.title}</S.Title>
@@ -88,7 +89,7 @@ export default function AdminNoticePage() {
       <NoticeTypeSelectModal
         isOpen={isTypeSelectOpen}
         onClose={() => setIsTypeSelectOpen(false)}
-        onSelect={(type) => navigate(`/admin/notices/new?type=${type}`)}
+        onSelect={(type) => navigate(ADMIN_PATHS.noticeNew(type))}
       />
     </S.Page>
   )

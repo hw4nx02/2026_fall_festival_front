@@ -5,6 +5,7 @@ import * as S from './AdminLostFoundPage.styles'
 import { getAdminLostItems } from '../../../../api/admin'
 import { toDateLabel } from './lostFoundDates'
 import LostFoundDateSelectModal from './LostFoundDateSelectModal'
+import { ADMIN_PATHS } from '../../../../router/adminPaths'
 
 // 한 번에 불러오는 개수 (명세상 size 최대 100)
 const PAGE_SIZE = 20
@@ -61,7 +62,7 @@ export default function AdminLostFoundPage() {
         {items.map((item) => (
           <S.ItemCard
             key={item.lost_item_id}
-            onClick={() => navigate(`/admin/lost-found/${item.lost_item_id}`)}
+            onClick={() => navigate(ADMIN_PATHS.lostFoundDetail(item.lost_item_id))}
           >
             <S.CardContent>
               <S.TitleRow>
@@ -99,7 +100,7 @@ export default function AdminLostFoundPage() {
       <LostFoundDateSelectModal
         isOpen={isDateSelectOpen}
         onClose={() => setIsDateSelectOpen(false)}
-        onSelect={(date) => navigate(`/admin/lost-found/new?date=${encodeURIComponent(date)}`)}
+        onSelect={(date) => navigate(ADMIN_PATHS.lostFoundNew(date))}
       />
     </S.Page>
   )

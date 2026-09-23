@@ -6,6 +6,7 @@ import { deleteAdminLostItem, getAdminLostItemDetail } from '../../../../api/adm
 import { toDateLabel } from './lostFoundDates'
 import { sortBySortOrder } from './lostItemFields'
 import ConfirmDeleteModal from '../LanternManage/ConfirmDeleteModal'
+import { ADMIN_PATHS } from '../../../../router/adminPaths'
 
 export default function AdminLostFoundDetailPage() {
   const { itemId } = useParams()
@@ -46,7 +47,7 @@ export default function AdminLostFoundDetailPage() {
     }
   }, [itemId])
 
-  const goToList = () => navigate('/admin/lost-found')
+  const goToList = () => navigate(ADMIN_PATHS.lostFound)
 
   const handleDeleteConfirm = async () => {
     if (isDeleting) return
@@ -111,7 +112,7 @@ export default function AdminLostFoundDetailPage() {
               </S.KeywordList>
             </S.KeywordSection>
             <S.BottomBar>
-              <S.PrimaryButton type="button" onClick={() => navigate(`/admin/lost-found/${itemId}/edit`)}>
+              <S.PrimaryButton type="button" onClick={() => navigate(ADMIN_PATHS.lostFoundEdit(itemId))}>
                 게시물 수정하기
               </S.PrimaryButton>
               <S.DangerButton type="button" onClick={() => setIsDeleteOpen(true)}>

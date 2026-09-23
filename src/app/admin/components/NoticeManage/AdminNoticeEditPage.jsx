@@ -6,11 +6,12 @@ import NoticeEditor from './NoticeEditor'
 import { getAdminNoticeDetail, updateAdminNotice } from '../../../../api/admin'
 import { getNoticeTypeLabel, isUrgentNotice } from './noticeTypes'
 import { IMAGE_SIZE_MESSAGE, isImageTooLarge, toNoticeErrorMessage, uploadNoticeImage } from './noticeForm'
+import { ADMIN_PATHS } from '../../../../router/adminPaths'
 
 export default function AdminNoticeEditPage() {
   const { noticeId } = useParams()
   const navigate = useNavigate()
-  const detailPath = `/admin/notices/${noticeId}`
+  const detailPath = ADMIN_PATHS.noticeDetail(noticeId)
 
   // 초기값 바인딩용 상세 조회 — NoticeEditor는 initial* 값을 첫 렌더에서만 읽으므로 로드 후에 그린다
   const [notice, setNotice] = useState(null)

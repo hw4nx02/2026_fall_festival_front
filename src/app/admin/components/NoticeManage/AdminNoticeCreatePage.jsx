@@ -6,13 +6,14 @@ import NoticeEditor from './NoticeEditor'
 import { createAdminNotice } from '../../../../api/admin'
 import { NOTICE_TYPE_LABEL } from './noticeTypes'
 import { IMAGE_SIZE_MESSAGE, isImageTooLarge, toNoticeErrorMessage, uploadNoticeImage } from './noticeForm'
+import { ADMIN_PATHS } from '../../../../router/adminPaths'
 
 export default function AdminNoticeCreatePage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [type, setType] = useState(searchParams.get('type') === 'URGENT' ? 'URGENT' : 'NORMAL')
 
-  const listPath = '/admin/notices'
+  const listPath = ADMIN_PATHS.notices
 
   // 실패 시 에디터가 토스트로 띄울 메시지를 돌려준다 (성공하면 목록으로)
   const handleCreate = async ({ title, content, imageFile }) => {

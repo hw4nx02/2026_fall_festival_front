@@ -5,13 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:admin": "vite --config vite.admin.config.js",
+    "dev:admin": "vite --mode admin",
     "build": "npm run build:user && npm run build:admin",
-    "build:user": "vite build",
-    "build:admin": "vite build --config vite.admin.config.js",
+    "build:user": "vite build --outDir dist-next/user",
+    "build:admin": "vite build --mode admin --outDir dist-next/admin",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "preview:admin": "vite preview --config vite.admin.config.js"
+    "preview": "vite preview --outDir dist-next/user",
+    "preview:admin": "vite preview --outDir dist-next/admin"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.8",

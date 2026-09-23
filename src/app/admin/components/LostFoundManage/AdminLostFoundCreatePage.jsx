@@ -2,8 +2,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import LostFoundEditor from './LostFoundEditor'
 import { createAdminLostItem } from '../../../../api/admin'
+import { ADMIN_PATHS } from '../../../../router/adminPaths'
 
-const LIST_PATH = '/admin/lost-found'
+const LIST_PATH = ADMIN_PATHS.lostFound
 
 // 400 응답의 errors에는 누락된 필드만 담겨 온다 — 있는 것만 모아서 안내 문구로 쓴다
 const toErrorMessage = (error) => {

@@ -19,6 +19,15 @@
 - zone5를 포함한 모든 구역의 부스 좌표는 장소 목록 API 응답을 사용한다.
 - zone3·zone5는 씬의 `MAP_SCALE`이 2이므로 부스 좌표에도 같은 배율이 반영되어야 한다.
 
+## 부스 천막 규격(booth_size) — 2026-09-22
+
+- 부스마다 천막 종류를 `booth_size`로 고른다(API 명세: `rotation` 바로 다음 필드). `"BIG"` = 3m×6m 캐노피(기존 천막, 기본값), `"SMALL"` = 3m×3m 파고다 천막(`PagodaTent.jsx` — 흰색, 조명 장식 없음).
+- 값은 `GET /api/booths/` 부스 항목의 `booth_size`를 그대로 받는다. 없거나(`undefined`/`null`) 모르는 값이면 `"BIG"`으로 그리고, 소문자(`"small"`)·앞뒤 공백은 알아서 맞춘다 — `src/constants/boothSizes.js`의 `normalizeBoothSize`.
+- 천막 치수(가로·세로·기둥 높이·지붕 높이)는 `src/constants/boothSizes.js`의 `BOOTH_SIZE_SPECS`가 단일 출처다. 지도 뷰어(festival-map-viewer)도 이 파일을 sync로 가져가서 겹침 계산·이름표 높이에 쓴다.
+- `BoothMarker`는 위치·회전·클릭·바닥 글로우·라벨 앵커(두 천막 공통)만 맡고, 천막 모양은 크기별 컴포넌트(`CanopyTent` — BoothMarker.jsx 안, `PagodaTent.jsx`)가 맡는다.
+- 좌표(`map_x`/`map_y`)는 두 천막 모두 천막 **중심**이다. rotation 0이면 큰 천막은 6m 변이 x축과 나란하다.
+- 바닥 글로우(등불 단계)는 천막 크기와 상관없이 같은 표를 쓴다 — 작은 천막이라고 글로우까지 작아지면 "등불이 적은 부스"처럼 보이기 때문.
+
 ## glb 최적화 파이프라인 (2026-09-16, 이슈 #33)
 
 블렌더에서 export한 raw glb를 그대로 쓰지 않고 [gltf-transform](https://gltf-transform.dev/)으로 한 번 줄여서 올린다.

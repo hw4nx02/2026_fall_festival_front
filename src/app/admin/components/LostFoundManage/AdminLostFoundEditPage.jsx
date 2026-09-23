@@ -5,6 +5,7 @@ import LostFoundEditor from './LostFoundEditor'
 import { getAdminLostItemDetail, updateAdminLostItem } from '../../../../api/admin'
 import { sortBySortOrder, toKeywords } from './lostItemFields'
 import * as S from './AdminLostFoundDetailPage.styles'
+import { ADMIN_PATHS } from '../../../../router/adminPaths'
 
 // 400/404 응답 안내 문구 — errors에는 문제가 된 필드만 담겨 온다
 const toErrorMessage = (error) => {
@@ -17,7 +18,7 @@ const toErrorMessage = (error) => {
 export default function AdminLostFoundEditPage() {
   const { itemId } = useParams()
   const navigate = useNavigate()
-  const detailPath = `/admin/lost-found/${itemId}`
+  const detailPath = ADMIN_PATHS.lostFoundDetail(itemId)
 
   // 에디터는 마운트 시점의 값으로 초기화되므로 상세 조회가 끝난 뒤에 렌더한다
   const [item, setItem] = useState(null)

@@ -6,10 +6,12 @@ import { useAuth } from '../../../../hooks/useAuth'
 import { getBoothDetail } from '../../../../api/map'
 import lanternOn from '../../../../assets/map/lantern/lanternOn.svg'
 import lanternOff from '../../../../assets/map/lantern/lanternOff.svg'
+import { useTranslation } from '../../../../i18n/useTranslation'
 import * as S from './BoothDetailPanel.styles'
 
 // 실제 부스 설명은 장소 상세 페이지와 공통 콘텐츠를 재사용하도록 연결한다.
 export default function BoothDetailPanel({ boothId, onBack, sheetTab, setSheetTab, selectedDate }) {
+  const { language, t } = useTranslation()
   const { setActiveBooth } = useLanterns()
   const { isLoggedIn } = useAuth()
   // 등불 보기 탭에서 수정/삭제가 일어나면 MapProvider의 boothRevision이 올라간다.
@@ -45,9 +47,9 @@ export default function BoothDetailPanel({ boothId, onBack, sheetTab, setSheetTa
           boothId,
           isLoggedIn,
           booth: null,
-          error: error.response?.status === 404
-            ? '장소를 찾을 수 없습니다.'
-            : '장소 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.',
+          errorKey: error.response?.status === 404
+            ? 'map.placeNotFound'
+            : 'map.placeLoadError',
         })
       })
     return () => { ignore = true }
@@ -56,8 +58,9 @@ export default function BoothDetailPanel({ boothId, onBack, sheetTab, setSheetTa
     booth &&
     (booth.place_type === 'FACILITY' ||
       ['TOILET', 'ALCOHOL'].includes(booth.category))
-  const money = (value) =>
-    value ? `${value.toLocaleString('ko-KR')}원` : '무료'
+  const money = (value) => value
+    ? t('map.currency', { value: value.toLocaleString(language) })
+    : t('map.free')
 
   const activeBoothId = booth && !simple ? booth.booth_id : null
   const festivalDate = selectedDate ?? '2026-09-29'
@@ -78,8 +81,8 @@ export default function BoothDetailPanel({ boothId, onBack, sheetTab, setSheetTa
         <S.Back
           type="button"
           onClick={onBack}
-          aria-label="목록으로 돌아가기"
-          title="목록으로 돌아가기"
+          aria-label={t('map.backToList')}
+          title={t('map.backToList')}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -97,14 +100,14 @@ export default function BoothDetailPanel({ boothId, onBack, sheetTab, setSheetTa
           </svg>
         </S.Back>
         {booth && !simple && (
-          <S.Tabs aria-label="부스 상세 보기">
+          <S.Tabs aria-label={t('map.boothDetailView')}>
             <S.Tab
               type="button"
               $active={sheetTab === 'info'}
               aria-pressed={sheetTab === 'info'}
               onClick={() => setSheetTab('info')}
             >
-              부스 설명
+              {t('map.boothDescription')}
             </S.Tab>
             <S.Tab
               type="button"
@@ -112,15 +115,15 @@ export default function BoothDetailPanel({ boothId, onBack, sheetTab, setSheetTa
               aria-pressed={sheetTab === 'lantern'}
               onClick={() => setSheetTab('lantern')}
             >
-              등불 보기
+              {t('map.viewLanterns')}
             </S.Tab>
           </S.Tabs>
         )}
       </S.Toolbar>
       {isLoading ? (
-        <S.Message role="status">장소 정보를 불러오는 중이에요...</S.Message>
+        <S.Message role="status">{t('map.loadingPlace')}</S.Message>
       ) : !booth ? (
-        <S.Message role="alert">{currentDetail.error}</S.Message>
+        <S.Message role="alert">{t(currentDetail.errorKey)}</S.Message>
       ) : (
         <>
           <S.Header>
@@ -134,7 +137,7 @@ export default function BoothDetailPanel({ boothId, onBack, sheetTab, setSheetTa
               <S.Lantern $on={booth.has_my_lantern}>
                 <img
                   src={booth.has_my_lantern ? lanternOn : lanternOff}
-                  alt={booth.has_my_lantern ? '내 등불 등록됨' : '등불'}
+                  alt={booth.has_my_lantern ? t('map.lanternRegistered') : t('map.lanternNotRegistered')}
                 />
                 <span>{booth.lantern_count}</span>
               </S.Lantern>
@@ -147,12 +150,12 @@ export default function BoothDetailPanel({ boothId, onBack, sheetTab, setSheetTa
               {simple ? (
                 <>
                   <S.Section>
-                    <S.Label>위치</S.Label>
+                    <S.Label>{t('map.location')}</S.Label>
                     <S.Text>{booth.location_detail || booth.zone}</S.Text>
                   </S.Section>
                   {booth.place_type === 'FACILITY' && booth.directions && (
                     <S.Section>
-                      <S.Label>가는 길</S.Label>
+                      <S.Label>{t('map.directions')}</S.Label>
                       <S.Text>{booth.directions}</S.Text>
                     </S.Section>
                   )}
@@ -161,38 +164,38 @@ export default function BoothDetailPanel({ boothId, onBack, sheetTab, setSheetTa
                 <>
                   {booth.description && (
                     <S.Section>
-                      <S.Label>소개</S.Label>
+                      <S.Label>{t('map.introduction')}</S.Label>
                       <S.Text>{booth.description}</S.Text>
                     </S.Section>
                   )}
                   <S.Section>
                     <S.LabelRow>
-                      <S.Label>정보</S.Label>
+                      <S.Label>{t('map.information')}</S.Label>
                       {booth.has_reusable_container && (
                         
                         <S.Reusable>
                           <svg xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none">
                             <path d="M10.8753 0.892131C8.26171 2.42573 8.44891 5.57573 6.61771 6.99713C5.23951 8.06693 3.29491 7.52513 2.17051 7.06493C2.17051 7.06493 1.40851 8.02673 0.861909 9.30893C0.678909 9.73913 -0.124491 9.26513 0.0165087 8.90093C1.80331 4.28993 7.88251 1.98953 7.88251 1.98953C7.88251 1.98953 3.59311 1.80773 0.726309 5.55353C0.649509 4.69793 0.522308 2.38313 2.74231 0.963531C5.75191 -0.963069 11.4855 0.534531 10.8753 0.892131Z" fill="#0D9352"/>
                           </svg>
-                          다회용기 이용부스</S.Reusable>
+                          {t('map.reusableBooth')}</S.Reusable>
                       )}
                     </S.LabelRow>
-                    <S.Text>운영 위치: {booth.location_detail || booth.zone}</S.Text>
-                    <S.Operations aria-label="운영 일정">
+                    <S.Text>{t('map.operationLocation')}: {booth.location_detail || booth.zone}</S.Text>
+                    <S.Operations aria-label={t('map.operationSchedule')}>
                       {booth.operations.map((op) => (
                         <li key={`${op.festival_date}-${op.time_slot}`}>
-                          운영 시간: {Number(op.festival_date.slice(5, 7))}/
-                          {Number(op.festival_date.slice(8, 10))} ({op.time_slot === 'DAY' ? '주간' : '야간'}){' '}
+                          {t('map.operationTime')}: {Number(op.festival_date.slice(5, 7))}/
+                          {Number(op.festival_date.slice(8, 10))} ({t(op.time_slot === 'DAY' ? 'map.day' : 'map.night')}){' '}
                           {op.open_at}–{op.close_at}
                         </li>
                       ))}
                     </S.Operations>
-                    {!booth.operations.length && <S.Text>운영 일정 미정</S.Text>}
-                    <S.Text>입장료: {money(booth.entrance_fee)}</S.Text>
+                    {!booth.operations.length && <S.Text>{t('map.scheduleTbd')}</S.Text>}
+                    <S.Text>{t('map.admissionFee')}: {money(booth.entrance_fee)}</S.Text>
                   </S.Section>
                   {booth.category !== 'ECO' && booth.menus.length > 0 && (
                     <S.Section>
-                      <S.Label>메뉴</S.Label>
+                      <S.Label>{t('map.menu')}</S.Label>
                       <S.MenuList>
                         {[...booth.menus]
                           .sort((a, b) => a.sort_order - b.sort_order)
@@ -207,13 +210,13 @@ export default function BoothDetailPanel({ boothId, onBack, sheetTab, setSheetTa
                   )}
                   {booth.event_description && (
                     <S.Section>
-                      <S.Label>이벤트</S.Label>
+                      <S.Label>{t('map.event')}</S.Label>
                       <S.Text>{booth.event_description}</S.Text>
                     </S.Section>
                   )}
                   {booth.instagram_id && (
                     <S.Section>
-                      <S.Label>인스타</S.Label>
+                      <S.Label>{t('map.instagram')}</S.Label>
                       <S.Instagram
                         href={`https://www.instagram.com/${encodeURIComponent(booth.instagram_id)}/`}
                         target="_blank"
@@ -227,10 +230,10 @@ export default function BoothDetailPanel({ boothId, onBack, sheetTab, setSheetTa
               )}
               {booth.image_url && (
                 <S.Section>
-                  <S.Label>이미지</S.Label>
+                  <S.Label>{t('map.image')}</S.Label>
                   <S.Poster
                     src={booth.image_url}
-                    alt={`${booth.name} 안내 이미지`}
+                    alt={t('map.boothImageAlt', { name: booth.name })}
                   />
                 </S.Section>
               )}

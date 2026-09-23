@@ -1,12 +1,23 @@
 import { adminClient as apiClient } from './adminClient'
 
+// 관리자 API가 아닌 서버(예: 사용자 도메인의 공개 API)에 연결됐을 때의 로그인 실패
+export class AdminHostMismatchError extends Error {
+  constructor() {
+    super('관리자 API가 아닌 서버에 연결됐습니다.')
+    this.name = 'AdminHostMismatchError'
+  }
+}
+
 // 관리자 로그인 — 백엔드에 로그인 API가 없으므로 입력한 키(ADMIN_API_TOKEN)를 그대로 토큰으로 쓴다.
 // 키로 관리자 API를 한 번 호출해 검증하고, 틀리면 401로 reject된다. 성공 시 키를 반환.
+// 관리자 도메인이 아닌 곳에 붙으면 공개 공지 목록이 아무 키에나 200으로 응답하므로,
+// 관리자 전용 응답 코드(ADMIN_NOTICE_LIST_SUCCESS)인지까지 확인한다.
 export const adminLogin = async (adminKey) => {
-  await apiClient.get('/api/notices/', {
+  const { data } = await apiClient.get('/api/notices/', {
     params: { size: 1 },
     headers: { Authorization: `Bearer ${adminKey}` },
   })
+  if (data?.code !== 'ADMIN_NOTICE_LIST_SUCCESS') throw new AdminHostMismatchError()
   return adminKey
 }
 

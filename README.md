@@ -47,12 +47,18 @@ src/
 
 ## 관리자 페이지
 
-사용자 앱(`dgufesta.com`)과 관리자 앱(`admin.dgufesta.com`)은 별도 번들로 빌드됩니다.
+사용자 앱과 관리자 앱은 같은 코드(`src/router/index.jsx`의 `userRoutes` / `adminRoutes`)에서 **빌드만 따로** 만듭니다. 어느 앱인지는 Vite 모드로 정해집니다(`--mode admin`이면 관리자 앱 — `src/router/appTarget.js`).
 
-```bash
-npm run build
-# dist/user  — dgufesta.com
-# dist/admin — admin.dgufesta.com
-```
+| 명령 | 결과 |
+| --- | --- |
+| `npm run dev` / `npm run dev:admin` | 로컬 개발 서버 `http://localhost:5173` — 사용자 앱 / 관리자 앱 (같은 포트라 하나씩 띄우기) |
+| `npm run build` | `dist-next/user`(사용자) + `dist-next/admin`(관리자) 둘 다 빌드 |
+| `npm run preview` / `npm run preview:admin` | 빌드 결과 미리보기 |
 
-관리자 앱 내부 경로는 `/admin/*`를 유지합니다. 일반 사이트와 레이아웃(`AdminAppLayout`)·테마(`adminTheme`, 다크)·인증(`useAdminAuthStore`, 관리자 키)이 완전히 분리되어 있으니, 관리자 화면 작업 시 일반 사이트 컴포넌트를 가져다 쓰지 말고 `src/app/admin/` 안에서 해결해주세요.
+- 배포: nginx가 `dgufesta.com`에 사용자 빌드, `admin.dgufesta.com`에 관리자 빌드를 연결합니다. 관리자는 Cloudflare Access 이메일 로그인 → `/login`에서 관리자 키 입력.
+- 백엔드는 Host가 `admin.*`일 때만 관리자 API를 열기 때문에, 로컬 관리자 앱도 `.env`의 `VITE_ADMIN_API_BASE_URL`(`http://admin.localhost:8000`)로 요청합니다.
+- 관리자 빌드는 `--mode admin`이라 `.env.production`(`.local`)을 읽지 않습니다(`.env`, `.env.admin`(`.local`)만 읽음).
+- 사용자 도메인의 예전 주소(`/admin/...`)는 관리자 도메인의 같은 화면으로 자동 이동합니다(로컬 `npm run dev`에서는 `dev:admin` 안내만 표시).
+- 관리자 화면 경로는 `src/router/adminPaths.js`의 `ADMIN_PATHS`로만 만들어 주세요(경로 문자열 직접 쓰지 않기).
+
+일반 사이트와 레이아웃(`AdminAppLayout`)·테마(`adminTheme`, 다크)·인증(`useAdminAuthStore`, 관리자 키)이 완전히 분리되어 있으니, 관리자 화면 작업 시 일반 사이트 컴포넌트를 가져다 쓰지 말고 `src/app/admin/` 안에서 해결해주세요.

@@ -70,6 +70,16 @@ export const Input = styled.input`
     background-color: #E0E0E0;
 `;
 
+// 로그인 실패 이유 — 다른 관리자 화면의 ErrorMessage(LanternManage)와 같은 톤
+export const ErrorMessage = styled.p`
+    width: 343px;
+    margin: 0;
+    color: #AD0000;
+    font-size: 11px;
+    text-align: center;
+    font-family: var(--font-pretendard);
+`;
+
 export const SubmitButton = styled.button`
     display: flex;
     width: 343px;

@@ -5,6 +5,7 @@ import * as S from './AdminNoticeDetailPage.styles'
 import { deleteAdminNotice, getAdminNoticeDetail } from '../../../../api/admin'
 import { getNoticeTypeLabel, isUrgentNotice } from './noticeTypes'
 import ConfirmDeleteModal from '../LanternManage/ConfirmDeleteModal'
+import { ADMIN_PATHS } from '../../../../router/adminPaths'
 
 export default function AdminNoticeDetailPage() {
   const { noticeId } = useParams()
@@ -45,7 +46,7 @@ export default function AdminNoticeDetailPage() {
     }
   }, [noticeId])
 
-  const goToList = () => navigate('/admin/notices')
+  const goToList = () => navigate(ADMIN_PATHS.notices)
 
   const handleDeleteConfirm = async () => {
     if (isDeleting) return
@@ -94,7 +95,7 @@ export default function AdminNoticeDetailPage() {
               <S.Content>{notice.content}</S.Content>
             </S.ContentCard>
             <S.BottomBar>
-              <S.PrimaryButton type="button" onClick={() => navigate(`/admin/notices/${noticeId}/edit`)}>
+              <S.PrimaryButton type="button" onClick={() => navigate(ADMIN_PATHS.noticeEdit(noticeId))}>
                 게시물 수정하기
               </S.PrimaryButton>
               <S.DangerButton type="button" onClick={() => setIsDeleteOpen(true)}>

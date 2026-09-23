@@ -4,11 +4,14 @@ import { Select } from '@react-three/postprocessing'
 import * as THREE from 'three'
 import PinLabel from '../../components/PinLabel/PinLabel'
 import { useTimeOfDay } from '../environment/TimeOfDayContext'
+import PagodaTent from './PagodaTent'
 import { MAX_LANTERN_TIER, getLanternTier } from '../../../../constants/lanternTiers'
+import { BOOTH_SIZE, BOOTH_SIZE_SPECS, getBoothTopHeight, normalizeBoothSize } from '../../../../constants/boothSizes'
 
 // 재사용 가능한 부스(천막) 오브젝트 — 실제 부스 3D 템플릿(.glb)이 아직 없어서
 // 좌표 소환 테스트 겸 시각적 데모용으로 만든 캐노피(가젤보) 천막 메시.
 // 실제 캐노피 천막 표준 규격(3m x 6m)에 맞춘 다리 6개 + 경사 지붕 2면 + 처마 발(valance) 구성.
+// 2026-09-22부터는 booth_size가 "SMALL"인 부스에 3m x 3m 파고다 천막(PagodaTent.jsx)을 대신 그린다(21번 항목).
 //
 // 2026-09-13 수정:
 //   1) 배치 방향 버그 수정 — 이전 버전은 짧은 변(3m)이 통로 진행 방향(Three.js X축)과
@@ -163,6 +166,17 @@ import { MAX_LANTERN_TIER, getLanternTier } from '../../../../constants/lanternT
 //      낮에는 바닥 글로우를 0단계 값(위치 식별용 최소 원판, 6번 항목)으로 고정하고 조명끈(lightScale)만 단계를
 //      반영한다 — 전구는 작아서 낮에도 "장식이 더 달렸다" 정도로만 보이고 화면을 덮지 않는다. 노을/밤은 그대로.
 //      낮 전용 채도·장식 단계 표현은 아직 없음(후속) — 필요해지면 이 자리에서 isDaytime 분기로 붙이면 된다.
+//  21) 2026-09-22: 천막 규격(booth_size) 2종 — 한 천막(3x6)을 두 부스가 나눠 쓰던 자리에 3x3 작은 천막을 하나 더
+//      세워 분리하기로 하면서(재원 결정), 부스마다 booth_size("BIG" | "SMALL", API 명세값)로 천막 종류를 고른다.
+//      (a) 규격표는 constants/boothSizes.js가 단일 출처 — "BIG" = 3x6 캐노피(기존), "SMALL" = 3x3 파고다.
+//          값이 없거나(백엔드 필드 추가 전) 모르는 값이면 "BIG"이라 기존 화면은 그대로다.
+//      (b) 구조 분리: 이 컴포넌트는 "부스 공통 껍데기"(위치·회전·클릭·바닥 글로우·밝기 단계 계산·라벨 앵커)만 맡고,
+//          천막 모양은 크기별 컴포넌트가 맡는다 — 기존 본문에 있던 캐노피 지오메트리는 JSX·값 그대로 CanopyTent로
+//          옮겼고(치수만 규격표에서 읽음, 6x3·처마 0.25·기둥 2.3·지붕 1로 이전과 동일), 작은 천막은 새 파일 PagodaTent.jsx.
+//      (c) 작은 천막은 재원이 공유한 흰색 파고다 텐트 사진 기준 — 흰 천, 오목하게 솟은 4면 지붕, 피니얼, 기둥 4개.
+//          조명 장식(랜턴·조명끈·지붕 위 조명)은 달지 않는다(재원 선택: "사진처럼 조명 없이").
+//      (d) 바닥 글로우(등불 단계)는 두 천막이 같은 BRIGHTNESS_TIERS를 쓴다 — 등불 인기도 표현이 천막 크기에 따라
+//          달라지면 안 되므로(작은 천막이라고 글로우까지 작으면 "등불이 적은 부스"처럼 보인다) 일부러 공통으로 뒀다.
 //
 // 좌표/앵커 규칙(팀 합의, map-section-scope-and-roles.md B안):
 //   - 이 컴포넌트는 "부스 오브젝트 + 라벨 앵커 좌표"만 제공한다.
@@ -176,8 +190,10 @@ import { MAX_LANTERN_TIER, getLanternTier } from '../../../../constants/lanternT
 //   - showLabel: 위 <Html> PinLabel을 그릴지 여부(기본 true). 2026-09-20에 3D 핀(BoothPin)을
 //     도입하면서 추가 — 둘을 같은 자리에 겹쳐 띄우면 지저분해서, ZoneBooths가 마커 모드에 따라
 //     이 값을 꺼준다. 라벨 앵커 좌표(booth-label-* 그룹) 자체는 그대로 두고 렌더만 건너뛴다.
-//   - color: 캐노피(지붕+처마) 색상 — 카테고리 구분용, 기본값은 실제 천막 사진 기준 파란색
-//   - accentColor: 용마루 포인트 컬러
+//   - size: 천막 규격(booth_size) — "BIG"(기본, 3x6 캐노피) | "SMALL"(3x3 파고다). 없거나 모르는 값·대소문자
+//     차이는 constants/boothSizes.js의 normalizeBoothSize가 정리한다(21번 항목)
+//   - color: 천(지붕+처마) 색상. 비워 두면 천막마다 사진 기준 기본색 — 큰 천막은 파란색, 작은 천막은 흰색
+//   - accentColor: 용마루 포인트 컬러(큰 천막만 — 작은 천막은 용마루가 없다)
 //   - lanternCount: 이 부스에 달린 등불 개수(place.lantern_count) — PinLabel의 숫자 표시와 밝기 단계
 //     계산(19번 항목, getLanternTier)에 같이 쓰인다. 없으면 0개로 취급.
 //   - brightnessLevel: (선택) 0~MAX_LANTERN_TIER(현재 5) 밝기 단계 override. null/undefined(기본)면
@@ -568,27 +584,19 @@ function CanopyRidgeLights({
   )
 }
 
-export default function BoothMarker({
-  position,
-  rotationY = 0,
-  label,
-  showLabel = true,
-  category,
-  lanternCount = 0,
-  color = '#1d5fa8',
-  accentColor = '#123f75',
-  brightnessLevel = null,
-  onClick,
-}) {
-  const width = 6 // 부스 폭 — 통로와 나란한 긴 변(정면이 넓게 보이는 방향), 캐노피 천막 표준 규격
-  const depth = 3 // 부스 깊이 — 통로에서 안쪽으로 들어가는 짧은 변
-  const poleHeight = 2.3
-  // 처마 대비 용마루 높이 — 16번 항목: 재원 피드백("천막이 너무 납작해보여")으로 0.55→1(경사각
+// 3m x 6m 캐노피(가젤보) 천막 본체 — booth_size "BIG"(기본값). 21번 항목 참고.
+// 원래 BoothMarker 본문에 있던 천막 지오메트리(기둥·랜턴·히프지붕·용마루 바·조명끈·처마 천)를 JSX·값 그대로 옮겨 왔다.
+// 바뀐 건 치수를 constants/boothSizes.js 규격표에서 읽는다는 것뿐이다(6x3, 처마 0.25, 기둥 2.3, 지붕 1 — 이전과 같은 값).
+// lightScale: 조명끈 밝기 배율(BRIGHTNESS_TIERS의 lightScale) — 밝기 단계 계산은 BoothMarker가 하고 결과만 넘겨받는다.
+function CanopyTent({ color = '#1d5fa8', accentColor = '#123f75', lightScale = 1 }) {
+  // width: 부스 폭 — 통로와 나란한 긴 변(정면이 넓게 보이는 방향), 캐노피 천막 표준 규격
+  // depth: 부스 깊이 — 통로에서 안쪽으로 들어가는 짧은 변
+  // roofRise: 처마 대비 용마루 높이 — 16번 항목: 재원 피드백("천막이 너무 납작해보여")으로 0.55→1(경사각
   // 약 17°→30°)로 올림. 히프지붕/조명끈 좌표가 전부 이 값 하나로 계산되는 구조라(useHipRoofGeometry,
   // TentLightOutline, CanopyRidgeLights 전부 roofRise를 prop으로 받아 계산) 이 숫자만 바꿔도
   // 나머지 지오메트리·조명끈이 자동으로 같이 따라 올라간다 — 다른 코드는 손댈 필요 없었음.
-  const roofRise = 1
-  const eaveOverhang = 0.25 // 처마가 다리보다 살짝 튀어나오는 정도
+  // eaveOverhang: 처마가 다리보다 살짝 튀어나오는 정도(0.25)
+  const { width, depth, eaveOverhang, poleHeight, roofRise } = BOOTH_SIZE_SPECS[BOOTH_SIZE.BIG]
   const valanceHeight = 0.28 // 처마 밑으로 늘어지는 천 높이
 
   const halfWidth = width / 2
@@ -601,23 +609,6 @@ export default function BoothMarker({
   const halfRun = Math.max(halfRidge - ROOF_HIP_INSET, 0.3) // 용마루 절반 길이(14번 항목, 최소 0.3 보장)
   const ridgeRun = halfRun * 2 // 용마루 전체 길이 — 처마(ridgeSpan)보다 짧아진 실제 용마루
 
-  // 밝기 단계 결정(19번 항목): brightnessLevel이 명시되면(개발용 override) 그 값을, 아니면 이 부스의
-  // 등불 개수로 getLanternTier()가 정한 단계를 쓴다. lanternCount도 Number()로 감싸는 이유는 API 응답이
-  // 문자열("32")이나 null로 올 수 있어서(NaN/null → 0개 → 0단계).
-  const resolvedLevel = brightnessLevel ?? getLanternTier(Number(lanternCount) || 0)
-  // 0~MAX_BRIGHTNESS_LEVEL(현재 5) 범위로 안전하게 clamp — 잘못된 값(음수, 범위 초과, 문자열,
-  // undefined/NaN)이 들어와도 배열 밖을 참조하지 않도록. Number()로 한 번 감싸는 이유는 나중에
-  // API 응답값이 문자열("3")로 들어오는 경우까지 방어하기 위함(NaN이면 || 0으로 0단계 처리).
-  // 표에서 꺼낸 값들은 바닥 글로우(GroundGlow)와 조명끈(TentLightOutline+CanopyRidgeLights)에만
-  // 쓰인다 — 지붕/처마 자체는 여전히 밝기 단계에 반응하지 않음(9번 항목 참고, 재원 요청 유지).
-  const safeLevel = Math.min(Math.max(Math.round(Number(resolvedLevel) || 0), 0), MAX_BRIGHTNESS_LEVEL)
-  // 낮 게이팅(20번 항목): 낮에는 바닥 글로우를 0단계 값으로 고정(위치 식별만), 조명끈만 단계 반영.
-  // 노을/밤(그리고 Provider 없이 단독 렌더할 때의 기본값 'night')은 표 값을 그대로 쓴다.
-  const isDaytime = useTimeOfDay() === 'day'
-  const tierValues = BRIGHTNESS_TIERS[safeLevel]
-  const { glowOpacity, glowRadius, glowIntensity } = isDaytime ? BRIGHTNESS_TIERS[0] : tierValues
-  const { lightScale } = tierValues
-
   // 다리 6개 — 긴 변(X축)마다 3개씩 2줄로 배치 (실제 3m x 6m 캐노피 천막 프레임과 동일)
   const poleOffsets = [
     [-1, -1],
@@ -629,16 +620,7 @@ export default function BoothMarker({
   ]
 
   return (
-    <group position={position} rotation={[0, rotationY, 0]} onClick={onClick}>
-      {/* 바닥 글로우 링 — 부스 위치 자체를 카메라 거리와 무관하게 눈에 띄게 하는 마커.
-          색은 카테고리색이 아니라 랜턴과 같은 따뜻한 노란빛(GROUND_GLOW_COLOR)으로 통일.
-          brightnessLevel(등불 개수 단계)이 올라갈수록 진하기(opacity)·반경(radius)·빛 세기
-          (intensity, HDR 배율 → 블룸 번짐)가 같이 커지도록 연동했다 — 재원 요청("등불 개수에
-          연동, 일단 버튼으로 미리보기") + 18번 항목("단계 차이를 드라마틱하게"). 0단계에서도
-          완전히 안 보이진 않게 최소 opacity는 남겨둠(위치 식별 기능 자체는 항상 유지).
-          단계별 실제 값은 전부 BRIGHTNESS_TIERS 표에 있다 — 여기서 수식으로 계산하지 않음. */}
-      <GroundGlow opacity={glowOpacity} radius={glowRadius} intensity={glowIntensity} />
-
+    <>
       {/* 다리(프레임) 6개 — 은색 알루미늄 톤 + 기둥마다 장식용 랜턴 1개씩 */}
       {poleOffsets.map(([signX, signZ], i) => (
         <group key={i}>
@@ -717,6 +699,64 @@ export default function BoothMarker({
         <boxGeometry args={[0.03, valanceHeight, slopeSpan * 2]} />
         <meshStandardMaterial color={color} side={2} />
       </mesh>
+    </>
+  )
+}
+
+export default function BoothMarker({
+  position,
+  rotationY = 0,
+  label,
+  showLabel = true,
+  category,
+  lanternCount = 0,
+  size,
+  color,
+  accentColor,
+  brightnessLevel = null,
+  onClick,
+}) {
+  // 천막 규격(21번 항목) — API의 booth_size를 "BIG" | "SMALL"로 정리한다. 값이 없거나 모르는 값이면 "BIG"(기존 천막).
+  const boothSize = normalizeBoothSize(size)
+  const isSmallTent = boothSize === BOOTH_SIZE.SMALL
+
+  // 밝기 단계 결정(19번 항목): brightnessLevel이 명시되면(개발용 override) 그 값을, 아니면 이 부스의
+  // 등불 개수로 getLanternTier()가 정한 단계를 쓴다. lanternCount도 Number()로 감싸는 이유는 API 응답이
+  // 문자열("32")이나 null로 올 수 있어서(NaN/null → 0개 → 0단계).
+  const resolvedLevel = brightnessLevel ?? getLanternTier(Number(lanternCount) || 0)
+  // 0~MAX_BRIGHTNESS_LEVEL(현재 5) 범위로 안전하게 clamp — 잘못된 값(음수, 범위 초과, 문자열,
+  // undefined/NaN)이 들어와도 배열 밖을 참조하지 않도록. Number()로 한 번 감싸는 이유는 나중에
+  // API 응답값이 문자열("3")로 들어오는 경우까지 방어하기 위함(NaN이면 || 0으로 0단계 처리).
+  // 표에서 꺼낸 값들은 바닥 글로우(GroundGlow)와 조명끈(TentLightOutline+CanopyRidgeLights)에만
+  // 쓰인다 — 지붕/처마 자체는 여전히 밝기 단계에 반응하지 않음(9번 항목 참고, 재원 요청 유지).
+  const safeLevel = Math.min(Math.max(Math.round(Number(resolvedLevel) || 0), 0), MAX_BRIGHTNESS_LEVEL)
+  // 낮 게이팅(20번 항목): 낮에는 바닥 글로우를 0단계 값으로 고정(위치 식별만), 조명끈만 단계 반영.
+  // 노을/밤(그리고 Provider 없이 단독 렌더할 때의 기본값 'night')은 표 값을 그대로 쓴다.
+  const isDaytime = useTimeOfDay() === 'day'
+  const tierValues = BRIGHTNESS_TIERS[safeLevel]
+  const { glowOpacity, glowRadius, glowIntensity } = isDaytime ? BRIGHTNESS_TIERS[0] : tierValues
+  const { lightScale } = tierValues
+
+  return (
+    <group position={position} rotation={[0, rotationY, 0]} onClick={onClick}>
+      {/* 바닥 글로우 링 — 부스 위치 자체를 카메라 거리와 무관하게 눈에 띄게 하는 마커.
+          색은 카테고리색이 아니라 랜턴과 같은 따뜻한 노란빛(GROUND_GLOW_COLOR)으로 통일.
+          brightnessLevel(등불 개수 단계)이 올라갈수록 진하기(opacity)·반경(radius)·빛 세기
+          (intensity, HDR 배율 → 블룸 번짐)가 같이 커지도록 연동했다 — 재원 요청("등불 개수에
+          연동, 일단 버튼으로 미리보기") + 18번 항목("단계 차이를 드라마틱하게"). 0단계에서도
+          완전히 안 보이진 않게 최소 opacity는 남겨둠(위치 식별 기능 자체는 항상 유지).
+          단계별 실제 값은 전부 BRIGHTNESS_TIERS 표에 있다 — 여기서 수식으로 계산하지 않음.
+          21번 항목: 천막 크기(booth_size)와 무관하게 같은 표를 쓴다 — 작은 천막이라고 글로우까지 작으면
+          "등불이 적은 부스"처럼 읽혀서, 등불 인기도 표현은 천막 크기와 상관없이 똑같이 보여준다. */}
+      <GroundGlow opacity={glowOpacity} radius={glowRadius} intensity={glowIntensity} />
+
+      {/* 천막 본체 — booth_size별로 다른 천막을 그린다(21번 항목). 큰 천막(기본)은 기존 캐노피 그대로이고,
+          작은 천막은 조명 장식 없이 천막만 있다(재원 선택) — 등불 단계는 위 바닥 글로우로만 보인다. */}
+      {isSmallTent ? (
+        <PagodaTent color={color} />
+      ) : (
+        <CanopyTent color={color} accentColor={accentColor} lightScale={lightScale} />
+      )}
 
       {/* 부스명 라벨 앵커 — 원래 계획(B안)은 이 좌표 위에 프론트A가 drei Html로 텍스트를 얹는
           것이었음. 2026-09-13: 재원 요청("지금 localhost에서 부스 위에 마커가 뜨게 해줘")으로,
@@ -729,7 +769,7 @@ export default function BoothMarker({
       {label && showLabel ? (
         <group
           name={`booth-label-${label}`}
-          position={[0, poleHeight + roofRise + 0.5, 0]}
+          position={[0, getBoothTopHeight(boothSize) + 0.5, 0]}
         >
           <Html center distanceFactor={30} zIndexRange={[10, 0]}>
             <PinLabel onClick={onClick} label={label} category={category} lanternCount={lanternCount} />

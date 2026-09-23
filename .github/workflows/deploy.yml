@@ -44,5 +44,6 @@ jobs:
             node:22-alpine \
             sh -c "npm ci && npm run build"
 
-          test -f "$FRONT_DIR/dist/user/index.html"
-          test -f "$FRONT_DIR/dist/admin/index.html"
+          # 사용자 빌드와 관리자 빌드가 모두 만들어졌는지 확인
+          test -f "$FRONT_DIR/dist-next/user/index.html"
+          test -f "$FRONT_DIR/dist-next/admin/index.html"

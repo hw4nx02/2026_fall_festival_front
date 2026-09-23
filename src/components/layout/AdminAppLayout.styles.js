@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import { ADMIN_PATHS } from '../../router/adminPaths'
 
 export const Page = styled.div`
     min-height: 100vh;
@@ -55,7 +56,7 @@ export const Tab = styled.button`
 `
 
 export const TABS = [
-    { path: '/admin/lanterns', label: '등불 관리' },
-    { path: '/admin/notices', label: '공지 관리' },
-    { path: '/admin/lost-found', label: '분실물 관리' },
+    { path: ADMIN_PATHS.lanterns, label: '등불 관리' },
+    { path: ADMIN_PATHS.notices, label: '공지 관리' },
+    { path: ADMIN_PATHS.lostFound, label: '분실물 관리' },
 ]

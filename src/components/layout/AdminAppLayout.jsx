@@ -1,7 +1,7 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import * as S from './AdminAppLayout.styles';
 
-// 관리자 전용 레이아웃 — adminTheme(다크)가 App.jsx에서 /admin/* 라우트에만 적용된다
+// 관리자 전용 레이아웃 — adminTheme(다크)는 관리자 도메인의 라우트(router/index.jsx adminRoutes)에만 적용된다
 export default function AdminAppLayout() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
